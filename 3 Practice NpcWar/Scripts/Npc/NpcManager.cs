@@ -175,7 +175,7 @@ public partial class NpcManager : Node3D
         }
     }
 
-    // Каждый кадр считает живых НПС и выводит число в Label на CanvasLayer.
+    // Каждый кадр считает не-null элементы массива НПС и выводит число в Label.
     public override void _Process(double delta)
     {
         if (_npcCountLabel == null)
@@ -183,17 +183,17 @@ public partial class NpcManager : Node3D
             return;
         }
 
-        int aliveCount = 0;
+        int nonNullCount = 0;
 
         foreach (Npc npc in _npcs)
         {
-            if (npc != null && npc.IsAlive)
+            if (npc != null)
             {
-                aliveCount++;
+                nonNullCount++;
             }
         }
 
-        _npcCountLabel.Text = $"Npcs: {aliveCount}";
+        _npcCountLabel.Text = $"Npcs: {nonNullCount}";
     }
 
     // Getter адреса памяти, где лежит позиция противника.

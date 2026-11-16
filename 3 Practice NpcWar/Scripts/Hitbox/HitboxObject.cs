@@ -11,8 +11,11 @@ public sealed class HitboxObject
     // Скорость меньше этой величины обрабатывается каждый кадр (п. 5.2.1).
     private const float MinimumSpeedForOptimization = 1f;
 
-    // Множитель FPS в формуле периода: fps * 4 / speed.
-    private const float SpeedMultiplierForUpdatePeriod = 4f;
+    // Множитель FPS в формуле периода: fps * SpeedMultiplierForUpdatePeriod / speed.
+    private const float SpeedMultiplierForUpdatePeriod = 9f;
+
+    // Степень увеличения хитбокса в сторону движения.
+    private const float MovementExtensionExponent = 0.34f;
 
     public Node3D Node { get; }
     public ulong InstanceId { get; }
@@ -35,6 +38,7 @@ public sealed class HitboxObject
 
     private readonly Vector3 _localCenter;
     private readonly Vector3 _baseSize;
+    private bool _hasPreviousPosition;
 
     public HitboxObject(Node3D node, HitboxType type, int typeIndex, Vector3 localCenter, Vector3 baseSize)
     {
@@ -57,11 +61,39 @@ public sealed class HitboxObject
     public void UpdateFromNode(float framesPerSecond)
     {
         Transform3D transform = Node.GlobalTransform;
+        Basis rotationBasis = transform.Basis.Orthonormalized();
 
-        Position = transform * _localCenter;
-        Rotation = transform.Basis.Orthonormalized().GetEuler();
-        Size = _baseSize * transform.Basis.Scale.Abs();
+        Vector3 newPosition = transform * _localCenter;
+        Vector3 newSize = _baseSize * transform.Basis.Scale.Abs();
+        int framesBetweenUpdates = UpdatePeriod;
+
+        if (_hasPreviousPosition && framesBetweenUpdates > 1)
+        {
+            Vector3 movement = newPosition - Position;
+
+            // Вектор движения переводим в локальные оси хитбокса,
+            // потому что Size задан именно в этих осях.
+            Vector3 localMovement = rotationBasis.Inverse() * movement;
+            float maxComponent = Mathf.Max(
+                Mathf.Abs(localMovement.X),
+                Mathf.Max(Mathf.Abs(localMovement.Y), Mathf.Abs(localMovement.Z)));
+
+            if (maxComponent > 0f)
+            {
+                Vector3 movementDirection = localMovement / maxComponent;
+                float extension = Mathf.Pow(framesBetweenUpdates, MovementExtensionExponent);
+                newSize += new Vector3(
+                    Mathf.Abs(movementDirection.X),
+                    Mathf.Abs(movementDirection.Y),
+                    Mathf.Abs(movementDirection.Z)) * extension;
+            }
+        }
+
+        Position = newPosition;
+        Rotation = rotationBasis.GetEuler();
+        Size = newSize;
         Speed = GetSpeed(Node);
+        _hasPreviousPosition = true;
 
         UpdatePeriod = CalculateUpdatePeriod(framesPerSecond, Speed);
         FramesUntilUpdate = UpdatePeriod - 1 < 0 ? 0 : UpdatePeriod - 1;

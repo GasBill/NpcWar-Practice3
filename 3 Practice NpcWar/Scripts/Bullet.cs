@@ -18,6 +18,8 @@ public partial class Bullet : Node3D, IHitboxSpeedProvider
     // Время жизни пули в физических кадрах.
     [Export] public int LifetimeFrames = DefaultLifetimeFrames;
 
+    private const float VerticalDirectionThreshold = 0.99f;
+
     public Npc Shooter { get; private set; }
     public int ShooterId { get; private set; } = -1;
     public Vector3 Direction { get; private set; }
@@ -39,6 +41,14 @@ public partial class Bullet : Node3D, IHitboxSpeedProvider
         Shooter = shooter;
         ShooterId = shooter != null ? shooter.Id : -1;
         Direction = direction.LengthSquared() > 0f ? direction.Normalized() : -GlobalTransform.Basis.Z;
+
+        // Разворачиваем пулю так, чтобы её -Z смотрел по направлению движения.
+        Vector3 up = Mathf.Abs(Direction.Dot(Vector3.Up)) > VerticalDirectionThreshold
+            ? Vector3.Right
+            : Vector3.Up;
+        Basis orientation = Basis.LookingAt(Direction, up);
+        GlobalTransform = new Transform3D(orientation, GlobalPosition);
+
         _framesLeft = LifetimeFrames;
         _launched = true;
     }
