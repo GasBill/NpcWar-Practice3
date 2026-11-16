@@ -15,3 +15,5 @@ res://Main.tscn
 res://SceneUsage/Npc.tscn
 res://Scripts/Hitbox/Processors/NpcDamageProcessor.cs
 res://SceneUsage/Bullet.tscn
+res://README.md
+res://Scripts/Hitbox/HitboxObject.cs

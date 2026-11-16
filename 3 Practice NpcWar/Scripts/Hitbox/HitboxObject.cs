@@ -12,7 +12,7 @@ public sealed class HitboxObject
     private const float MinimumSpeedForOptimization = 1f;
 
     // Множитель FPS в формуле периода: fps * SpeedMultiplierForUpdatePeriod / speed.
-    private const float SpeedMultiplierForUpdatePeriod = 9f;
+    private const float SpeedMultiplierForUpdatePeriod = 5f;
 
     // Степень увеличения хитбокса в сторону движения.
     private const float MovementExtensionExponent = 0.34f;

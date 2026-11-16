@@ -215,7 +215,7 @@ MaxComponentsPerNpc = 5
 MinComponentsPerNpc = 3
 Difficulty = 30
 GameDifficulty = 120
-TeamCount = 30
+TeamCount = 12
 SpawnRadius = 25.0
 InnerRadius = 24.0
 
