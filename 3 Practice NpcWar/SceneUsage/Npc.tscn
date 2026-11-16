@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://buc30f0geqmn8"]
+
+[ext_resource type="Script" uid="uid://cryx3a3ulfkvk" path="res://Scripts/Npc/Npc.cs" id="1_sdap6"]
+
+[sub_resource type="SeparationRayShape3D" id="SeparationRayShape3D_wkp8b"]
+length = 1.8620995
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sdap6"]
+
+[sub_resource type="PrismMesh" id="PrismMesh_8dnhd"]
+size = Vector3(1, 1.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_70ge6"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_8dnhd"]
+radius = 0.4
+height = 0.8
+
+[node name="Npc" type="CharacterBody3D" unique_id=1825569330]
+script = ExtResource("1_sdap6")
+
+[node name="BodyShape" type="CollisionShape3D" parent="." unique_id=1940993161]
+transform = Transform3D(1, 0, 0, 0, -4.3711385e-08, 0.99999994, 0, -0.99999994, -4.3711385e-08, 0, -0.84344715, 0)
+shape = SubResource("SeparationRayShape3D_wkp8b")
+
+[node name="Body" type="MeshInstance3D" parent="BodyShape" unique_id=787509002]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, -2.3743574e-08, 0.54318964)
+material_override = SubResource("StandardMaterial3D_sdap6")
+mesh = SubResource("PrismMesh_8dnhd")
+
+[node name="Head" type="MeshInstance3D" parent="BodyShape" unique_id=425048841]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, -6.36603e-08, 1.4563779)
+material_override = SubResource("StandardMaterial3D_70ge6")
+mesh = SubResource("SphereMesh_8dnhd")
+
+[node name="Hp" type="Label3D" parent="." unique_id=1113964339]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3821507, 0)
+pixel_size = 0.02
+billboard = 1
+text = "999"
