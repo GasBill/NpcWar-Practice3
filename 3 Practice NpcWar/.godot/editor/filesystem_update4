@@ -1,0 +1,17 @@
+res://Scripts/Player/Player.cs
+res://Scripts/Components/ShootComponent.cs
+res://Scripts/Components/MoveComponent.cs
+res://Scripts/Components/MeleeAttackComponent.cs
+res://Scripts/Npc/Npc.cs
+res://Scripts/Components/HealthComponent.cs
+res://Scripts/Npc/NpcManager.cs
+res://Scripts/Bullet.cs
+res://Scripts/Hitbox/HitboxTypeConfig.cs
+res://Scripts/Hitbox/Processors/NpcHitboxProcessor.cs
+res://Scripts/Hitbox/HitboxProcessor.cs
+res://Scripts/Hitbox/Processors/BulletHitboxProcessor.cs
+res://Scripts/Hitbox/HitboxManager.cs
+res://Main.tscn
+res://SceneUsage/Npc.tscn
+res://Scripts/Hitbox/Processors/NpcDamageProcessor.cs
+res://SceneUsage/Bullet.tscn

@@ -1,13 +1,15 @@
 [gd_scene format=3 uid="uid://b86kmp77oly0h"]
 
 [ext_resource type="Script" uid="uid://dtfo2ynomrely" path="res://Scripts/Npc/NpcManager.cs" id="1_glv2v"]
-[ext_resource type="Script" uid="uid://wonqnw8fapqw" path="res://Scripts/Components/HealthComponent.cs" id="2_lgr22"]
 [ext_resource type="PackedScene" uid="uid://buc30f0geqmn8" path="res://SceneUsage/Npc.tscn" id="2_uu6xs"]
-[ext_resource type="Script" uid="uid://0dicb70mrykl" path="res://Scripts/Components/INpcComponent.cs" id="3_trn2v"]
-[ext_resource type="Script" uid="uid://bydqvqg51ee57" path="res://Scripts/Components/MeleeAttackComponent.cs" id="4_03owx"]
-[ext_resource type="Script" uid="uid://cdtdvwcivapp4" path="res://Scripts/Components/MoveComponent.cs" id="5_wkp8b"]
-[ext_resource type="Script" uid="uid://d0oemrvi55cn8" path="res://Scripts/Components/ShootComponent.cs" id="6_20pc6"]
 [ext_resource type="Script" uid="uid://b3254axalk7ya" path="res://Scripts/Player/Player.cs" id="8_trn2v"]
+[ext_resource type="Script" uid="uid://bm0we6figwyb2" path="res://Scripts/Hitbox/HitboxManager.cs" id="9_hitbox_manager"]
+[ext_resource type="Script" uid="uid://dvxfjtdyafuwn" path="res://Scripts/Hitbox/HitboxTypeConfig.cs" id="10_hitbox_type"]
+[ext_resource type="PackedScene" uid="uid://d0ctmfi1t8gnb" path="res://SceneUsage/Bullet.tscn" id="11_bullet_scene"]
+[ext_resource type="Script" uid="uid://c6xd7j7tpea5f" path="res://Scripts/Hitbox/Processors/NpcHitboxProcessor.cs" id="12_npc_hitbox_processor"]
+[ext_resource type="Script" uid="uid://darcdfkpnh3um" path="res://Scripts/Hitbox/Processors/BulletHitboxProcessor.cs" id="13_bullet_hitbox_processor"]
+[ext_resource type="PackedScene" path="res://SceneUsage/NpcDamageHitbox.tscn" id="14_npc_damage_scene"]
+[ext_resource type="Script" uid="uid://bcey6j8ypbfoi" path="res://Scripts/Hitbox/Processors/NpcDamageProcessor.cs" id="15_npc_damage_processor"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_8dnhd"]
 radius = 60.0
@@ -70,18 +72,33 @@ edge_fade = 7.6109233
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_iqnhg"]
 
+[sub_resource type="Resource" id="Resource_npc_hitbox_type"]
+script = ExtResource("10_hitbox_type")
+GroupName = "Npc"
+Scene = ExtResource("2_uu6xs")
+ProcessorScript = ExtResource("12_npc_hitbox_processor")
+OptimizeChecks = true
+CollisionTypeNumbers = Array[int]([0])
+
+[sub_resource type="Resource" id="Resource_bullet_hitbox_type"]
+script = ExtResource("10_hitbox_type")
+GroupName = "Bullet"
+Scene = ExtResource("11_bullet_scene")
+ProcessorScript = ExtResource("13_bullet_hitbox_processor")
+OptimizePosition = true
+OptimizeChecks = true
+
+[sub_resource type="Resource" id="Resource_npc_damage_type"]
+script = ExtResource("10_hitbox_type")
+GroupName = "NpcDamage"
+Scene = ExtResource("14_npc_damage_scene")
+ProcessorScript = ExtResource("15_npc_damage_processor")
+OptimizePosition = true
+OptimizeChecks = true
+CheckIntervalFrames = 50
+CollisionTypeNumbers = Array[int]([0])
+
 [node name="World" type="Node3D" unique_id=1155932613]
-script = ExtResource("1_glv2v")
-MaxComponentsPerNpc = 5
-MinComponentsPerNpc = 3
-Difficulty = 50
-GameDifficulty = 2000
-TeamCount = 12
-SpawnRadius = 23.0
-InnerRadius = 10.0
-SpawnSectorAngles = Array[float]([0.0, 0.0, 0.0, 0.0, 0.0])
-ComponentScripts = Array[CSharpScript]([ExtResource("2_lgr22"), ExtResource("3_trn2v"), ExtResource("4_03owx"), ExtResource("5_wkp8b"), ExtResource("6_20pc6")])
-NpcScene = ExtResource("2_uu6xs")
 
 [node name="Eye" type="CollisionShape3D" parent="." unique_id=204296688]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 193.86542, 0)
@@ -169,10 +186,44 @@ physics_material_override = SubResource("PhysicsMaterial_iqnhg")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player/StaticBody3D" unique_id=71235945]
 shape = SubResource("SphereShape3D_iqnhg")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=505866572]
+[node name="Node" type="Node" parent="." unique_id=317241778]
 
-[node name="Count" type="Label" parent="CanvasLayer" unique_id=1655463074]
+[node name="HitboxManager" type="Node3D" parent="Node" unique_id=429141583]
+script = ExtResource("9_hitbox_manager")
+TypesOfObjects = Array[Resource]([SubResource("Resource_npc_hitbox_type"), SubResource("Resource_bullet_hitbox_type"), SubResource("Resource_npc_damage_type")])
+
+[node name="CanvasLayer" type="CanvasLayer" parent="Node/HitboxManager" unique_id=1415891570]
+
+[node name="Fps" type="Label" parent="Node/HitboxManager/CanvasLayer" unique_id=1926563823]
 offset_right = 59.2647
 offset_bottom = 31.0
+scale = Vector2(3.6318638, 3.6318638)
+text = "+/- Fps:"
+
+[node name="Fps2" type="Label" parent="Node/HitboxManager/CanvasLayer" unique_id=1478489466]
+offset_left = 873.0
+offset_right = 984.0
+offset_bottom = 49.0
+scale = Vector2(2.5118635, 2.5118635)
+text = "Press \"z\" 
+to see hiboxes"
+horizontal_alignment = 2
+
+[node name="NpcManager" type="Node3D" parent="Node" unique_id=2013630397]
+script = ExtResource("1_glv2v")
+MaxComponentsPerNpc = 5
+MinComponentsPerNpc = 3
+Difficulty = 30
+GameDifficulty = 250
+TeamCount = 12
+SpawnRadius = 25.0
+InnerRadius = 24.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="Node/NpcManager" unique_id=505866572]
+
+[node name="Count" type="Label" parent="Node/NpcManager/CanvasLayer" unique_id=1655463074]
+offset_top = 72.00001
+offset_right = 59.2647
+offset_bottom = 103.00001
 scale = Vector2(3.6318638, 3.6318638)
 text = "Npcs:"

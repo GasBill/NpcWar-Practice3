@@ -37,9 +37,39 @@ public partial class MoveComponent : Node, INpcComponent
 
             if (!_npc.Manager.TryGetNpcPositionLink(_npc.TargetId, _npc.Squad, out targetAddress))
             {
-                _npc.Velocity = Vector3.Zero;
+                StopHorizontal();
                 return;
             }
+        }
+
+        Npc targetNpc = _npc.Manager.GetNpcById(_npc.TargetId);
+
+        if (targetNpc == null || !targetNpc.IsAlive || targetNpc.Squad == _npc.Squad)
+        {
+            _npc.AcquireTarget();
+
+            if (!_npc.Manager.TryGetNpcPositionLink(_npc.TargetId, _npc.Squad, out targetAddress))
+            {
+                StopHorizontal();
+                return;
+            }
+
+            targetNpc = _npc.Manager.GetNpcById(_npc.TargetId);
+
+            if (targetNpc == null || !targetNpc.IsAlive || targetNpc.Squad == _npc.Squad)
+            {
+                StopHorizontal();
+                return;
+            }
+        }
+
+        // Хитбоксы уже пересеклись — НПС больше не идёт в сторону цели.
+        HitboxManager hitboxManager = _npc.Manager.HitboxSystem;
+
+        if (hitboxManager != null && hitboxManager.Intersects(_npc, targetNpc))
+        {
+            StopHorizontal();
+            return;
         }
 
         // Разыменовываем адрес: читаем именно переменную по ссылке.
@@ -49,7 +79,26 @@ public partial class MoveComponent : Node, INpcComponent
         Vector3 direction = *target - _npc.GlobalPosition;
         direction.Y = 0f;
 
-        _npc.Velocity = direction.Normalized() * Speed;
+        Vector3 horizontalVelocity = direction.Normalized() * Speed;
+        Vector3 velocity = _npc.Velocity;
+        velocity.X = horizontalVelocity.X;
+        velocity.Z = horizontalVelocity.Z;
+        _npc.Velocity = velocity;
+        _npc.MoveAndSlide();
+
+        if (_npc.Position != null)
+        {
+            *_npc.Position = _npc.GlobalPosition;
+        }
+    }
+
+    // Гасит горизонтальное движение, сохраняя вертикальную скорость гравитации.
+    private unsafe void StopHorizontal()
+    {
+        Vector3 velocity = _npc.Velocity;
+        velocity.X = 0f;
+        velocity.Z = 0f;
+        _npc.Velocity = velocity;
         _npc.MoveAndSlide();
 
         if (_npc.Position != null)

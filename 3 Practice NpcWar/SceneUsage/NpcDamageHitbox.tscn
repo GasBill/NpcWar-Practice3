@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[sub_resource type="BoxMesh" id="BoxMesh_damage"]
+size = Vector3(2, 3.826, 2)
+
+[node name="NpcDamageHitbox" type="Node3D"]
+
+[node name="Bounds" type="MeshInstance3D" parent="."]
+visible = false
+mesh = SubResource("BoxMesh_damage")

@@ -5,8 +5,14 @@ using Godot;
 namespace TowerDefense;
 
 // НПС (башня/юнит), которого менеджер создаёт через Instantiate.
-public unsafe partial class Npc : CharacterBody3D
+public unsafe partial class Npc : CharacterBody3D, IHitboxSpeedProvider
 {
+    // Группа, из которой HitboxManager собирает объекты типа NPC.
+    public const string HitboxGroupName = "Npc";
+
+    // Группа отдельного damage-хитбокса NPC.
+    public const string DamageHitboxGroupName = "NpcDamage";
+
     // Группа объектов, по коллизиям которых определяется поверхность спавна.
     private const string SpawnSurfaceGroup = "ObjectsToSpawnOn";
 
@@ -32,6 +38,9 @@ public unsafe partial class Npc : CharacterBody3D
     // поэтому вместо обращения к движку проверяем это поле.
     public bool IsAlive = true;
 
+    // Скорость для расчёта периода обновления хитбокса.
+    public float HitboxSpeed => Velocity.Length();
+
     // Кэш компонентов атаки: тикают от общего таймера команды.
     private readonly List<INpcAttack> _attacks = new();
 
@@ -44,16 +53,16 @@ public unsafe partial class Npc : CharacterBody3D
     // Адрес выделяется один раз при спавне и передаётся менеджеру.
     public new Vector3* Position;
 
-    // Радиус точечной коллизии тела.
-    private const float PointCollisionRadius = 0.05f;
+    // Насколько нижняя точка физического отрезка поднята над поверхностью спавна.
+    [Export] public float SpawnHeightAboveSurface = 0.02f;
 
-    // Сколько секунд действует отталкивание от удара.
-    private const float HitPushDuration = 0.15f;
+    // Гравитация НПС; движение и приземление выполняет Godot-физика.
+    [Export] public float Gravity = 9.8f;
 
     // Радиус HitBox по умолчанию, если форму не удалось прочитать.
     private const float DefaultHitBoxRadius = 0.8f;
 
-    // Точка спавна только по XZ; Y НПС определяет сам по коллизиям.
+    // Точка спавна только по XZ; Y нормализуется по поверхности и коллизии.
     private Vector2 _spawnPositionXz;
 
     // Цвет команды, переданный менеджером при спавне.
@@ -78,9 +87,11 @@ public unsafe partial class Npc : CharacterBody3D
     // Один материал на цвет команды, а не на каждого НПС.
     private static readonly Dictionary<Color, StandardMaterial3D> SquadMaterials = new();
 
-    // Вектор удара, который действует короткое время.
-    private Vector3 _hitVelocity;
-    private float _hitPushTime;
+    // Если MoveComponent нет, физику двигает сам НПС.
+    private bool _hasMoveComponent;
+
+    // Накопленный вектор отталкивания от полученного урона.
+    private Vector3 _pendingHitVector;
 
     // Вызывается менеджером до добавления НПС на сцену.
     public void Initialize(
@@ -106,6 +117,15 @@ public unsafe partial class Npc : CharacterBody3D
                 AddChild(componentNode);
             }
         }
+
+        Node3D damageHitbox = new()
+        {
+            Name = "DamageHitbox",
+        };
+        AddChild(damageHitbox);
+        damageHitbox.AddToGroup(DamageHitboxGroupName);
+
+        _hasMoveComponent = GetComponent<MoveComponent>() != null;
 
         // При передаче данных из менеджера сразу показываем стартовое здоровье.
         Health = GetComponent<HealthComponent>();
@@ -140,7 +160,7 @@ public unsafe partial class Npc : CharacterBody3D
             return;
         }
 
-        ConfigurePointCollision();
+        AddToGroup(HitboxGroupName);
         Rotation = new Vector3(0f, Rotation.Y, 0f);
 
         // Позиция и цвет ставятся до _Ready дочерних компонентов,
@@ -243,11 +263,26 @@ public unsafe partial class Npc : CharacterBody3D
         _healthLabelInitialized = true;
     }
 
-    // Вектор от удара или пули: НПС отталкивается несколько кадров.
+    // Отталкивание от удара; MoveAndCollide применяет его через физику Godot.
     public void ApplyHitVector(Vector3 vector)
     {
-        _hitVelocity = vector;
-        _hitPushTime = HitPushDuration;
+        _pendingHitVector += vector;
+    }
+
+    // Раздвигание пересекшихся хитбоксов; вызывается только HitboxManager.
+    public void ApplySeparationVector(Vector3 vector)
+    {
+        if (vector.LengthSquared() <= 0f)
+        {
+            return;
+        }
+
+        MoveAndCollide(vector);
+
+        if (Position != null)
+        {
+            *Position = GlobalPosition;
+        }
     }
 
     public override void _PhysicsProcess(double delta)
@@ -260,15 +295,32 @@ public unsafe partial class Npc : CharacterBody3D
             Rotation = new Vector3(0f, rotation.Y, 0f);
         }
 
-        if (_hitPushTime > 0f)
+        if (_pendingHitVector.LengthSquared() > 0f)
         {
-            GlobalPosition += _hitVelocity * (float)delta;
-            _hitPushTime -= (float)delta;
+            MoveAndCollide(_pendingHitVector);
+            _pendingHitVector = Vector3.Zero;
+        }
 
-            if (_hitPushTime <= 0f)
+        Vector3 velocity = Velocity;
+
+        if (IsOnFloor())
+        {
+            if (velocity.Y < 0f)
             {
-                _hitVelocity = Vector3.Zero;
+                velocity.Y = 0f;
             }
+        }
+        else
+        {
+            velocity.Y -= Gravity * (float)delta;
+        }
+
+        Velocity = velocity;
+
+        // Если MoveComponent нет, физику двигает сам НПС.
+        if (!_hasMoveComponent)
+        {
+            MoveAndSlide();
         }
 
         // Менеджер и движение читают позицию по адресу Position.
@@ -306,17 +358,6 @@ public unsafe partial class Npc : CharacterBody3D
         return Manager != null && Manager.TryGetNpcPositionLink(TargetId, Squad, out _);
     }
 
-    // Точечная коллизия тела: заменяем форму BodyShape на маленькую сферу.
-    private void ConfigurePointCollision()
-    {
-        CollisionShape3D bodyShape = GetNodeOrNull<CollisionShape3D>("BodyShape");
-
-        if (bodyShape != null)
-        {
-            bodyShape.Shape = new SphereShape3D { Radius = PointCollisionRadius };
-        }
-    }
-
     // HitBox больше не физическая Area: из формы берём только радиус,
     // а саму форму отключаем.
     private void ConfigureHitBox()
@@ -339,13 +380,17 @@ public unsafe partial class Npc : CharacterBody3D
     }
 
     // Ставит НПС на самую высокую точку коллизий группы ObjectsToSpawnOn
-    // под переданными XZ и приподнимает на половину собственной высоты.
+    // под переданными XZ. Верхняя точка поверхности и нижняя точка коллизии
+    // нормализуются, а SpawnHeightAboveSurface задаёт зазор над поверхностью.
     private void PlaceOnSpawnSurface()
     {
         float surfaceY = GetHighestSurfaceY(_spawnPositionXz.X, _spawnPositionXz.Y);
-        float halfHeight = GetOwnHeight() / 2f;
+        float bottomOffset = GetOwnBottomOffset();
 
-        GlobalPosition = new Vector3(_spawnPositionXz.X, surfaceY + halfHeight, _spawnPositionXz.Y);
+        GlobalPosition = new Vector3(
+            _spawnPositionXz.X,
+            surfaceY - bottomOffset + SpawnHeightAboveSurface,
+            _spawnPositionXz.Y);
     }
 
     // Ищет максимальную верхнюю точку AABB коллизий группы под точкой XZ.
@@ -425,6 +470,12 @@ public unsafe partial class Npc : CharacterBody3D
                     new Vector3(radius * 2f, height, radius * 2f));
             }
 
+            case SeparationRayShape3D ray:
+            {
+                // Отрезок начинается в локальном нуле и уходит вдоль +Y.
+                return new Aabb(Vector3.Zero, new Vector3(0f, ray.Length, 0f));
+            }
+
             default:
             {
                 Mesh debugMesh = shape.GetDebugMesh();
@@ -433,10 +484,12 @@ public unsafe partial class Npc : CharacterBody3D
         }
     }
 
-    // Высота самого объекта по его собственным CollisionShape3D.
-    private float GetOwnHeight()
+    // Смещение самой нижней точки включённых коллизий относительно корня НПС.
+    // Отрицательное значение означает, что коллизия находится ниже корня.
+    private float GetOwnBottomOffset()
     {
-        float height = 0f;
+        float bottomOffset = 0f;
+        bool found = false;
 
         foreach (Node child in FindChildren("*", "CollisionShape3D", true, false))
         {
@@ -446,10 +499,16 @@ public unsafe partial class Npc : CharacterBody3D
             }
 
             Aabb worldAabb = GetWorldTransform(shape) * GetShapeAabb(shape.Shape);
-            height = Mathf.Max(height, worldAabb.Size.Y);
+            float offset = worldAabb.Position.Y - GlobalPosition.Y;
+
+            if (!found || offset < bottomOffset)
+            {
+                bottomOffset = offset;
+                found = true;
+            }
         }
 
-        return height;
+        return found ? bottomOffset : 0f;
     }
 
     // Мировая трансформация узла без требования is_inside_tree():

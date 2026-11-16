@@ -3,7 +3,8 @@ using Godot;
 
 namespace TowerDefense;
 
-// Ближний бой: проверяет пересечение HitBox'ов и бьёт общую цель НПС.
+// Ближний бой: проверяет пересечение хитбоксов через HitboxManager
+// и бьёт общую цель НПС.
 [GlobalClass]
 public partial class MeleeAttackComponent : Node, INpcComponent, INpcAttack
 {
@@ -58,14 +59,17 @@ public partial class MeleeAttackComponent : Node, INpcComponent, INpcAttack
         AttackInterval /= multiplier;
     }
 
-    // Удар наносится, только если HitBox'ы attacker и цели пересекаются.
+    // Компонент только поддерживает актуальную цель.
+    // Сам удар выполняет NpcDamageProcessor через damage-хитбокс.
     private void Attack()
     {
         _npc.AcquireTarget();
+    }
 
-        Npc target = _npc.Manager?.GetNpcById(_npc.TargetId);
-
-        if (target == null || !target.IsAlive || target.Squad == _npc.Squad || !IsTargetInHitBox(target))
+    // Вызывается damage-хитбоксом раз в его интервал проверки.
+    public void DealDamage(Npc target)
+    {
+        if (_npc == null || target == null || !target.IsAlive || target.Squad == _npc.Squad)
         {
             return;
         }
@@ -85,12 +89,5 @@ public partial class MeleeAttackComponent : Node, INpcComponent, INpcAttack
         }
 
         health.TakeDamage(Damage, direction.Normalized(), _npc);
-    }
-
-    // Ближний бой по дистанции: суммарный радиус HitBox'ов.
-    private bool IsTargetInHitBox(Npc target)
-    {
-        float range = _npc.HitBoxRadius + target.HitBoxRadius;
-        return _npc.GlobalPosition.DistanceSquaredTo(target.GlobalPosition) <= range * range;
     }
 }

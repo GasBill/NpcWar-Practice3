@@ -10,6 +10,9 @@ public partial class HealthComponent : Node, INpcComponent
     // Делитель защиты в формуле урона: hp -= int(damage - def / 5).
     private const float DefenseDivisor = 5f;
 
+    // Степень урона в векторе отталкивания.
+    private const float KnockbackExponent = 0.5f;
+
     // Значение здоровья по умолчанию.
     private const float DefaultHealthValue = 300f;
 
@@ -53,8 +56,9 @@ public partial class HealthComponent : Node, INpcComponent
         AddChild(_regenTimer);
     }
 
-    // Урон уменьшается защитой; direction — от пули или от противника.
-    public void TakeDamage(float damage, Vector3 direction, Npc attacker = null)
+    // Урон уменьшается защитой.
+    // attackerId нужен для снарядов, у которых остался только Id отправителя.
+    public void TakeDamage(float damage, Vector3 direction, Npc attacker = null, int attackerId = -1)
     {
         if (_isDead)
         {
@@ -65,11 +69,19 @@ public partial class HealthComponent : Node, INpcComponent
         UpdateNpcHealthLabel();
         ApplyHitImpulse(direction, damage);
 
-        if (attacker != null && attacker.IsAlive && _npc != null && attacker.Squad != _npc.Squad)
+        int sourceId = attacker != null ? attacker.Id : attackerId;
+        Npc source = attacker;
+
+        if ((source == null || !source.IsAlive) && sourceId >= 0 && _npc != null)
+        {
+            source = _npc.Manager?.GetNpcById(sourceId);
+        }
+
+        if (source != null && source.IsAlive && _npc != null && source.Squad != _npc.Squad)
         {
             // Получили урон — переключаемся на того, кто его нанёс.
-            _npc.TargetId = attacker.Id;
-            EmitSignal(SignalName.Damaged, attacker);
+            _npc.TargetId = source.Id;
+            EmitSignal(SignalName.Damaged, source);
         }
 
         if (Health <= 0f)
@@ -126,9 +138,14 @@ public partial class HealthComponent : Node, INpcComponent
         }
     }
 
-    // Вектор удара: direction / max(компонента) * damage передаётся НПС на 1 кадр.
+    // Вектор отталкивания: direction / max(|x|,|y|,|z|) * damage^0.5.
     private void ApplyHitImpulse(Vector3 direction, float damage)
     {
+        if (_npc == null)
+        {
+            return;
+        }
+
         float maxComponent = Mathf.Max(
             Mathf.Abs(direction.X),
             Mathf.Max(Mathf.Abs(direction.Y), Mathf.Abs(direction.Z)));
@@ -138,10 +155,8 @@ public partial class HealthComponent : Node, INpcComponent
             return;
         }
 
-        if (_npc != null)
-        {
-            _npc.ApplyHitVector(direction / maxComponent * damage);
-        }
+        Vector3 pushVector = direction / maxComponent * Mathf.Pow(damage, KnockbackExponent);
+        _npc.ApplyHitVector(pushVector);
     }
 
     // Смерть: НПС просит менеджера удалить его из массива НПС.

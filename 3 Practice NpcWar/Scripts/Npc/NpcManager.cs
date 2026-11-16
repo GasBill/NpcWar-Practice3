@@ -107,12 +107,21 @@ public partial class NpcManager : Node3D
     // Label с количеством живых НПС.
     private Label _npcCountLabel;
 
+    // Хитбоксы живут на дочернем узле World; компоненты используют его для проверок.
+    public HitboxManager HitboxSystem { get; private set; }
+
     private readonly RandomNumberGenerator _random = new();
 
     public override void _Ready()
     {
         _random.Randomize();
         _npcCountLabel = GetNodeOrNull<Label>(NpcCountLabelPath);
+        HitboxSystem = GetNodeOrNull<HitboxManager>("HitboxManager");
+
+        if (HitboxSystem == null)
+        {
+            HitboxSystem = GetParent()?.GetNodeOrNull<HitboxManager>("HitboxManager");
+        }
 
         // Сцена НПС ищется в SceneUsage; поле в инспекторе — запасной вариант.
         PackedScene foundNpcScene = FindScene(NpcSceneName);
@@ -169,8 +178,6 @@ public partial class NpcManager : Node3D
     // Каждый кадр считает живых НПС и выводит число в Label на CanvasLayer.
     public override void _Process(double delta)
     {
-        PrintNpcLinks();
-
         if (_npcCountLabel == null)
         {
             return;
@@ -187,36 +194,6 @@ public partial class NpcManager : Node3D
         }
 
         _npcCountLabel.Text = $"Npcs: {aliveCount}";
-    }
-
-    // Выводит двумерный список [[Id, link], ...] в консоль каждый кадр.
-    private void PrintNpcLinks()
-    {
-        System.Text.StringBuilder builder = new();
-        builder.Append('[');
-        bool first = true;
-
-        for (int i = 0; i < _npcLinks.Count; i++)
-        {
-            List<object> pair = _npcLinks[i];
-
-            if (pair == null)
-            {
-                continue;
-            }
-
-            if (!first)
-            {
-                builder.Append(", ");
-            }
-
-            first = false;
-            IntPtr address = (IntPtr)pair[1];
-            builder.Append($"[{pair[0]}, 0x{address.ToInt64():X}]");
-        }
-
-        builder.Append(']');
-        GD.Print(builder.ToString());
     }
 
     // Getter адреса памяти, где лежит позиция противника.

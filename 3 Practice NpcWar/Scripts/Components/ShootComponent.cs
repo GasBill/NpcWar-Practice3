@@ -27,12 +27,15 @@ public partial class ShootComponent : Node, INpcComponent, INpcAttack
     {
         _npc = GetParent<Npc>();
 
-        // Сцена пули ищется в SceneUsage; поле в инспекторе — запасной вариант.
-        PackedScene foundBulletScene = FindScene(BulletSceneName);
-
-        if (foundBulletScene != null)
+        // Если сцена пули не задана в [Export], ищем Bullet.tscn в SceneUsage.
+        if (BulletScene == null)
         {
-            BulletScene = foundBulletScene;
+            PackedScene foundBulletScene = FindScene(BulletSceneName);
+
+            if (foundBulletScene != null)
+            {
+                BulletScene = foundBulletScene;
+            }
         }
 
         _timeUntilShot = FireInterval;
@@ -114,7 +117,7 @@ public partial class ShootComponent : Node, INpcComponent, INpcAttack
 
         if (bullet is Bullet bulletScript)
         {
-            bulletScript.Launch(_npc, target, direction);
+            bulletScript.Launch(_npc, direction);
         }
     }
 
