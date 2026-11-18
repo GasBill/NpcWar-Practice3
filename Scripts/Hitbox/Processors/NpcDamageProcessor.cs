@@ -33,17 +33,17 @@ public partial class NpcDamageProcessor : HitboxProcessor
             return;
         }
 
+        // Снаряд не наносит урон своей команде: союзника он пролетает насквозь.
+        if (bullet.ShooterSquad == npc.Squad)
+        {
+            return;
+        }
+
         Npc shooter = bullet.Shooter;
 
         if ((shooter == null || !shooter.IsAlive) && bullet.ShooterId >= 0)
         {
             shooter = npc.Manager?.GetNpcById(bullet.ShooterId);
-        }
-
-        // Свой и дружественный снаряд не наносит урон.
-        if (shooter != null && shooter.Squad == npc.Squad)
-        {
-            return;
         }
 
         HealthComponent health = npc.Health;

@@ -71,12 +71,8 @@ public unsafe partial class Npc : CharacterBody3D, IHitboxSpeedProvider
     // Label3D, в которую выводится здоровье.
     private Label3D _healthLabel;
 
-    // Обновление текста HP не чаще раза в 0.5 с: Label3D дорого перестраивать.
-    private const float HealthLabelInterval = 0.5f;
-    private float _healthLabelTimer;
-    private float _pendingHealth;
-    private bool _healthLabelDirty;
-    private bool _healthLabelInitialized;
+    // Здоровье, которое сейчас показано в Label.
+    private float _healthLabelValue;
 
     // HitBox-маркер: хранит форму для радиуса, физики не имеет.
     public Node3D HitBox;
@@ -144,9 +140,10 @@ public unsafe partial class Npc : CharacterBody3D, IHitboxSpeedProvider
 
         if (Health != null)
         {
-            _pendingHealth = Health.Health;
-            ApplyHealthLabel();
+            _healthLabelValue = Health.Health;
         }
+
+        ApplyHealthLabel();
 
         ConfigureHitBox();
 
@@ -224,30 +221,11 @@ public unsafe partial class Npc : CharacterBody3D, IHitboxSpeedProvider
     }
 
     // Показывает текущее здоровье НПС в Label3D "Hp".
+    // Label обновляется сразу при любом изменении здоровья.
     public void UpdateHealthLabel(float health)
     {
-        _pendingHealth = health;
-        _healthLabelDirty = true;
-
-        if (!_healthLabelInitialized)
-        {
-            ApplyHealthLabel();
-        }
-    }
-
-    public override void _Process(double delta)
-    {
-        if (!_healthLabelDirty)
-        {
-            return;
-        }
-
-        _healthLabelTimer += (float)delta;
-
-        if (_healthLabelTimer >= HealthLabelInterval)
-        {
-            ApplyHealthLabel();
-        }
+        _healthLabelValue = health;
+        ApplyHealthLabel();
     }
 
     private void ApplyHealthLabel()
@@ -257,10 +235,7 @@ public unsafe partial class Npc : CharacterBody3D, IHitboxSpeedProvider
             return;
         }
 
-        _healthLabel.Text = Mathf.Max(Mathf.CeilToInt(_pendingHealth), 0).ToString();
-        _healthLabelDirty = false;
-        _healthLabelTimer = 0f;
-        _healthLabelInitialized = true;
+        _healthLabel.Text = Mathf.Max(Mathf.CeilToInt(_healthLabelValue), 0).ToString();
     }
 
     // Отталкивание от удара; MoveAndCollide применяет его через физику Godot.

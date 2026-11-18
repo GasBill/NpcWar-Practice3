@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Work\\git\\NpcWar-Practice3\\Новый игровой проект.csproj": {}
+    "C:\\Users\\Dmitry\\Documents\\GitHub\\NpcWar-Practice3\\Новый игровой проект.csproj": {}
   },
   "projects": {
-    "D:\\Work\\git\\NpcWar-Practice3\\Новый игровой проект.csproj": {
+    "C:\\Users\\Dmitry\\Documents\\GitHub\\NpcWar-Practice3\\Новый игровой проект.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Work\\git\\NpcWar-Practice3\\Новый игровой проект.csproj",
+        "projectUniqueName": "C:\\Users\\Dmitry\\Documents\\GitHub\\NpcWar-Practice3\\Новый игровой проект.csproj",
         "projectName": "Новый игровой проект",
-        "projectPath": "D:\\Work\\git\\NpcWar-Practice3\\Новый игровой проект.csproj",
-        "packagesPath": "C:\\Users\\artem\\.nuget\\packages\\",
-        "outputPath": "D:\\Work\\git\\NpcWar-Practice3\\.godot\\mono\\temp\\obj\\",
+        "projectPath": "C:\\Users\\Dmitry\\Documents\\GitHub\\NpcWar-Practice3\\Новый игровой проект.csproj",
+        "packagesPath": "C:\\Users\\Dmitry\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Dmitry\\Documents\\GitHub\\NpcWar-Practice3\\.godot\\mono\\temp\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\artem\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Dmitry\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],

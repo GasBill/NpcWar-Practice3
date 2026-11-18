@@ -12,3 +12,4 @@ res://Scripts/Components/ShootComponent.cs
 res://Scripts/Components/HealthComponent.cs
 res://Scripts/Components/MeleeAttackComponent.cs
 res://Scripts/Components/MoveComponent.cs
+res://README.md

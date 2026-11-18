@@ -1,22 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "VtxOti8dnJw=",
+  "dgSpecHash": "2n1yfn9xpPc=",
   "success": true,
-  "projectFilePath": "D:\\Work\\git\\NpcWar-Practice3\\Новый игровой проект.csproj",
+  "projectFilePath": "C:\\Users\\Dmitry\\Documents\\GitHub\\NpcWar-Practice3\\Новый игровой проект.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\artem\\.nuget\\packages\\godot.sourcegenerators\\4.7.2\\godot.sourcegenerators.4.7.2.nupkg.sha512",
-    "C:\\Users\\artem\\.nuget\\packages\\godotsharp\\4.7.2\\godotsharp.4.7.2.nupkg.sha512",
-    "C:\\Users\\artem\\.nuget\\packages\\godotsharpeditor\\4.7.2\\godotsharpeditor.4.7.2.nupkg.sha512"
+    "C:\\Users\\Dmitry\\.nuget\\packages\\godot.sourcegenerators\\4.7.2\\godot.sourcegenerators.4.7.2.nupkg.sha512",
+    "C:\\Users\\Dmitry\\.nuget\\packages\\godotsharp\\4.7.2\\godotsharp.4.7.2.nupkg.sha512",
+    "C:\\Users\\Dmitry\\.nuget\\packages\\godotsharpeditor\\4.7.2\\godotsharpeditor.4.7.2.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1900",
-      "level": "Warning",
-      "message": "Произошла ошибка при получении данных уязвимости пакета: Не удалось загрузить индекс служб для источника https://api.nuget.org/v3/index.json.",
-      "projectPath": "D:\\Work\\git\\NpcWar-Practice3\\Новый игровой проект.csproj",
-      "warningLevel": 1,
-      "filePath": "D:\\Work\\git\\NpcWar-Practice3\\Новый игровой проект.csproj",
-      "targetGraphs": []
-    }
-  ]
+  "logs": []
 }

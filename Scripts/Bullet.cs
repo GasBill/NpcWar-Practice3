@@ -22,6 +22,10 @@ public partial class Bullet : Node3D, IHitboxSpeedProvider
 
     public Npc Shooter { get; private set; }
     public int ShooterId { get; private set; } = -1;
+
+    // Команда стрелка на момент выстрела: по ней пуля отличает своих от чужих,
+    // даже если сам стрелок уже погиб.
+    public int ShooterSquad { get; private set; } = -1;
     public Vector3 Direction { get; private set; }
     public bool HasHit { get; private set; }
     public float HitboxSpeed => Speed;
@@ -40,6 +44,7 @@ public partial class Bullet : Node3D, IHitboxSpeedProvider
     {
         Shooter = shooter;
         ShooterId = shooter != null ? shooter.Id : -1;
+        ShooterSquad = shooter != null ? shooter.Squad : -1;
         Direction = direction.LengthSquared() > 0f ? direction.Normalized() : -GlobalTransform.Basis.Z;
 
         // Разворачиваем пулю так, чтобы её -Z смотрел по направлению движения.
