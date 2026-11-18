@@ -4,12 +4,18 @@
 [ext_resource type="PackedScene" uid="uid://buc30f0geqmn8" path="res://SceneUsage/Npc.tscn" id="2_uu6xs"]
 [ext_resource type="Script" uid="uid://b3254axalk7ya" path="res://Scripts/Player/Player.cs" id="8_trn2v"]
 [ext_resource type="Script" uid="uid://bm0we6figwyb2" path="res://Scripts/Hitbox/HitboxManager.cs" id="9_hitbox_manager"]
-[ext_resource type="Script" uid="uid://dvxfjtdyafuwn" path="res://Scripts/Hitbox/HitboxTypeConfig.cs" id="10_hitbox_type"]
 [ext_resource type="PackedScene" uid="uid://d0ctmfi1t8gnb" path="res://SceneUsage/Bullet.tscn" id="11_bullet_scene"]
-[ext_resource type="Script" uid="uid://c6xd7j7tpea5f" path="res://Scripts/Hitbox/Processors/NpcHitboxProcessor.cs" id="12_npc_hitbox_processor"]
-[ext_resource type="Script" uid="uid://darcdfkpnh3um" path="res://Scripts/Hitbox/Processors/BulletHitboxProcessor.cs" id="13_bullet_hitbox_processor"]
 [ext_resource type="PackedScene" path="res://SceneUsage/NpcDamageHitbox.tscn" id="14_npc_damage_scene"]
-[ext_resource type="Script" uid="uid://bcey6j8ypbfoi" path="res://Scripts/Hitbox/Processors/NpcDamageProcessor.cs" id="15_npc_damage_processor"]
+[ext_resource type="Script" uid="uid://cwvpcgug63hf6" path="res://Scripts/Projectile/BulletBehavior.cs" id="bullet_behavior"]
+[ext_resource type="Script" uid="uid://clfnfm51vuarv" path="res://Scripts/Entity/EntityManager.cs" id="entity_manager"]
+[ext_resource type="Script" uid="uid://boxl2jtyumwrd" path="res://Scripts/Entity/EntityTypeConfig.cs" id="entity_type"]
+[ext_resource type="Script" uid="uid://5essijrs1qp2" path="res://Scripts/Npc/NpcBehavior.cs" id="npc_behavior"]
+[ext_resource type="Script" uid="uid://x2gs0od7w2jc" path="res://Scripts/Npc/NpcData.cs" id="npc_data"]
+[ext_resource type="Script" uid="uid://bn5igc66f05jb" path="res://Scripts/Npc/NpcQuery.cs" id="npc_query"]
+[ext_resource type="Script" uid="uid://bqk6xtdrh4161" path="res://Scripts/Entity/PhysicManager.cs" id="physic_manager"]
+[ext_resource type="Script" uid="uid://c0dr5oqin0f0c" path="res://Scripts/Entity/PhysicProjectileManager.cs" id="physic_projectile_manager"]
+[ext_resource type="Script" uid="uid://cqjbkrsxshd75" path="res://Scripts/Entity/QueryManager.cs" id="query_manager"]
+[ext_resource type="Script" uid="uid://kmto37toiriu" path="res://Scripts/Entity/StaticBehavior.cs" id="static_behavior"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_8dnhd"]
 radius = 60.0
@@ -72,32 +78,44 @@ edge_fade = 7.6109233
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_iqnhg"]
 
-[sub_resource type="Resource" id="Resource_npc_hitbox_type"]
-script = ExtResource("10_hitbox_type")
-GroupName = "Npc"
-Scene = ExtResource("2_uu6xs")
-ProcessorScript = ExtResource("12_npc_hitbox_processor")
-OptimizeChecks = true
-CollisionTypeNumbers = Array[int]([0])
-
-[sub_resource type="Resource" id="Resource_bullet_hitbox_type"]
-script = ExtResource("10_hitbox_type")
-GroupName = "Bullet"
-Scene = ExtResource("11_bullet_scene")
-ProcessorScript = ExtResource("13_bullet_hitbox_processor")
+[sub_resource type="Resource" id="EntityType_npc"]
+script = ExtResource("entity_type")
+Name = "Npc"
+VisualScene = ExtResource("2_uu6xs")
+QueryScript = ExtResource("npc_query")
+BehaviorScript = ExtResource("npc_behavior")
+DataScript = ExtResource("npc_data")
 OptimizePosition = false
-OptimizeChecks = false
-CollisionTypeNumbers = Array[int]([2])
+CollisionTypeNames = Array[String](["Npc"])
+AdditionalHitboxTypeNames = Array[String](["NpcDamage"])
 
-[sub_resource type="Resource" id="Resource_npc_damage_type"]
-script = ExtResource("10_hitbox_type")
-GroupName = "NpcDamage"
-Scene = ExtResource("14_npc_damage_scene")
-ProcessorScript = ExtResource("15_npc_damage_processor")
+[sub_resource type="Resource" id="EntityType_npc_damage"]
+script = ExtResource("entity_type")
+Name = "NpcDamage"
+VisualScene = ExtResource("14_npc_damage_scene")
+BehaviorScript = ExtResource("npc_behavior")
+SpawnVisual = false
+OptimizePosition = false
+CheckIntervalFrames = 50
+CollisionTypeNames = Array[String](["Npc"])
+
+[sub_resource type="Resource" id="EntityType_bullet"]
+script = ExtResource("entity_type")
+Kind = 1
+Name = "Bullet"
+VisualScene = ExtResource("11_bullet_scene")
+BehaviorScript = ExtResource("bullet_behavior")
+LifetimeFrames = 200
 OptimizePosition = true
 OptimizeChecks = true
-CheckIntervalFrames = 50
-CollisionTypeNumbers = Array[int]([0])
+CollisionTypeNames = Array[String](["NpcDamage", "Static"])
+
+[sub_resource type="Resource" id="EntityType_static"]
+script = ExtResource("entity_type")
+Kind = 2
+Name = "Static"
+SceneObjectPaths = Array[String](["MainPlatform/Wall", "MainPlatform/Wall2", "MainPlatform/Wall3", "MainPlatform/Wall4", "MainPlatform/Floor"])
+BehaviorScript = ExtResource("static_behavior")
 
 [node name="World" type="Node3D" unique_id=1155932613]
 
@@ -189,19 +207,16 @@ shape = SubResource("SphereShape3D_iqnhg")
 
 [node name="Node" type="Node" parent="." unique_id=317241778]
 
-[node name="HitboxManager" type="Node3D" parent="Node" unique_id=429141583]
+[node name="EntityManager" type="Node3D" parent="Node" unique_id=2013630399]
+script = ExtResource("entity_manager")
+Types = Array[Resource]([SubResource("EntityType_npc"), SubResource("EntityType_npc_damage"), SubResource("EntityType_bullet"), SubResource("EntityType_static")])
+
+[node name="HitboxManager" type="Node3D" parent="Node/EntityManager" unique_id=429141583]
 script = ExtResource("9_hitbox_manager")
-TypesOfObjects = Array[Resource]([SubResource("Resource_npc_hitbox_type"), SubResource("Resource_bullet_hitbox_type"), SubResource("Resource_npc_damage_type")])
 
-[node name="CanvasLayer" type="CanvasLayer" parent="Node/HitboxManager" unique_id=1415891570]
+[node name="CanvasLayer" type="CanvasLayer" parent="Node/EntityManager/HitboxManager" unique_id=1415891570]
 
-[node name="Fps" type="Label" parent="Node/HitboxManager/CanvasLayer" unique_id=1926563823]
-offset_right = 59.2647
-offset_bottom = 31.0
-scale = Vector2(3.6318638, 3.6318638)
-text = "+/- Fps:"
-
-[node name="Fps2" type="Label" parent="Node/HitboxManager/CanvasLayer" unique_id=1478489466]
+[node name="Fps2" type="Label" parent="Node/EntityManager/HitboxManager/CanvasLayer" unique_id=1478489466]
 offset_left = 873.0
 offset_right = 984.0
 offset_bottom = 49.0
@@ -210,12 +225,21 @@ text = "Press \"z\"
 to see hiboxes"
 horizontal_alignment = 2
 
+[node name="PhysicManager" type="Node3D" parent="Node/EntityManager" unique_id=2013630400]
+script = ExtResource("physic_manager")
+
+[node name="PhysicProjectileManager" type="Node" parent="Node/EntityManager/PhysicManager" unique_id=2013630401]
+script = ExtResource("physic_projectile_manager")
+
+[node name="QueryManager" type="Node" parent="Node/EntityManager" unique_id=2013630402]
+script = ExtResource("query_manager")
+
 [node name="NpcManager" type="Node3D" parent="Node" unique_id=2013630397]
 script = ExtResource("1_glv2v")
 MaxComponentsPerNpc = 5
 MinComponentsPerNpc = 3
 Difficulty = 30
-GameDifficulty = 120
+GameDifficulty = 250
 TeamCount = 12
 SpawnRadius = 25.0
 InnerRadius = 24.0

@@ -1,7 +1,5 @@
 [gd_scene format=3 uid="uid://d0ctmfi1t8gnb"]
 
-[ext_resource type="Script" uid="uid://bfx2kxfdtu7ei" path="res://Scripts/Bullet.cs" id="1_bullet"]
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ags3x"]
 albedo_color = Color(1, 0, 0, 1)
 emission_enabled = true
@@ -10,8 +8,6 @@ emission = Color(1, 0, 0, 1)
 [sub_resource type="SphereMesh" id="SphereMesh_8dnhd"]
 
 [node name="Bullet" type="Node3D" unique_id=553871202]
-script = ExtResource("1_bullet")
-LifetimeFrames = 200
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1393161431]
 material_override = SubResource("StandardMaterial3D_ags3x")

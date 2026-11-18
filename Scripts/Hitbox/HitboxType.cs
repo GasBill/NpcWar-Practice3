@@ -3,21 +3,18 @@ using Godot;
 
 namespace TowerDefense;
 
-// Тип хитбоксов, собранный из HitboxTypeConfig при инициализации менеджера.
-// Хранит вычисленные по сцене базовые размеры и список объектов этого типа.
+// Тип хитбоксов, собранный EntityManager из описания объекта.
+// Хранит базовые размеры, настройки оптимизации и обработчик поведения.
 public sealed class HitboxType
 {
-    public string GroupName;
-    public PackedScene Scene;
+    public string Name;
+    public EntityKind Kind;
+    public Vector3 BaseCenter;
+    public Vector3 BaseSize;
     public bool OptimizePosition;
     public bool OptimizeChecks;
     public int CheckIntervalFrames;
-    public int[] CollisionTypeNumbers;
-    public Vector3 BaseCenter;
-    public Vector3 BaseSize;
-    public HitboxProcessor Processor;
-    public bool IsValid;
-
-    // Список объектов типа; он же лежит в HitboxManager.HitboxesByType.
+    public string[] CollisionTypeNames = System.Array.Empty<string>();
+    public EntityBehavior Behavior;
     public readonly List<HitboxObject> Objects = new();
 }
